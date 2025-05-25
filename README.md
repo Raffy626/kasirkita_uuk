@@ -1,5 +1,6 @@
 <h1>PROJECT UUK KELAS XI<h1/>
-<h3>Raffy Reshaina Pasha<h3/>
+  
+<h3>Raffy Reshaina Pasha / XI RPL A / 29<h3/>
 
 <h2>Tentang project</h2>
 <p>Ini ada project UUK saya, jadi aplikasi web kasir ini yang bernama kasirkita. Website ini dilengkapi dengan fitur autentikasi, yang dimana jika pengguna sudah menambahkan keranjang itu tidak tercampur di keranjang user / akun lain. dan middleware untuk mengecek dan mengijinkan pengguna yang sudah terdaftar untuk mengakses web dengan hak akses yang sesuai dengan hak akses yang sesuai dengan rolenya</p>
