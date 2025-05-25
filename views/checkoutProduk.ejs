@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout Berhasil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="checkout-confirmation-body">
+    <%- include('layout/sidebar') %>
+    <div class="checkout-confirmation-container">
+        <div class="success-message">
+            <h1>✅ Pembelian Berhasil!</h1>
+            <div class="transaction-details">
+                <h2>Detail Transaksi</h2>
+                <p>No. Transaksi: <%= transactionId %></p>
+                <p>Tanggal: <%= new Date().toLocaleString() %></p>
+                <p>Total: Rp <span><%= totalAmount.toLocaleString() %></span></p>
+            </div>
+            
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>Produk</th>
+                        <th>Jumlah</th>
+                        <th>Harga</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% items.forEach(item => { %>
+                    <tr>
+                        <td><%= item.nama_produk %></td>
+                        <td><%= item.quantity %></td>
+                        <td>Rp <span><%= item.harga.toLocaleString() %></span></td>
+                        <td>Rp <span><%= (item.harga * item.quantity).toLocaleString() %></span></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+
+            <div class="action-buttons">
+                <a href="/checkout/download-receipt/<%= transactionId %>" class="btn-download">Download Receipt</a>
+                <a href="/produk/pelanggan" class="btn-home">
+                    Kembali ke Beranda
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-minimal/minimal.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Daftar Produk</title>
+</head>
+
+<body class="daftar-produk-body">
+    <%- include('layout/sidebar') %>
+        <h1>Daftar Produk</h1>
+        <div class="cart-container">
+            <% produkList.forEach(produk=> { %>
+                <div class="cart-item">
+                    <img src="/image/<%= produk.foto %>" alt="Foto Produk" width="100">
+                    <div class="cart-item-info">
+                        <p><strong>Nama produk:</strong> <%= produk.nama_produk %></p>
+                        <p><strong>Kategori:</strong> <%= produk.kategori %></p>
+                        <p><strong>Harga:</strong> Rp <%= produk.harga.toLocaleString('id-ID') %></p>
+                        <p><strong>Stok:</strong> <%= produk.stok %></p>
+                    </div>
+                    <% if (produk.stok> 0) { %>
+                        <button onclick="addToCart('<%= produk._id %>', this)" class="btn-daftar-produk-pelanggan"
+                            data-stok="<%= produk.stok %>">Add To Cart</button>
+                        <% } else { %>
+                            <button class="btn-daftar-produk-pelanggan disabled" disabled>Stok Habis</button>
+                            <% } %>
+                </div>
+                <% }) %>
+        </div>
+
+        <!-- <script>
+        function addToCart(id, productName, stock) {
+            if (stock <= 0) {
+                Swal.fire({
+                    title: 'Stok Habis',
+                    text: `Maaf, produk "${productName}" sedang tidak tersedia`,
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Tambah ke Keranjang',
+                text: `Apakah Anda ingin menambahkan "${productName}" ke keranjang?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Tambahkan!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/penjualan/add-to-cart/${id}`;
+                }
+            });
+        }
+    </script> -->
+        <script>
+    function addToCart(produkId, buttonElement) {
+        fetch(`/penjualan/add-to-cart/${produkId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Perbarui tampilan stok
+                const cartItem = buttonElement.closest('.cart-item');
+                const stokElement = cartItem.querySelector('.cart-item-info p:last-child');
+                stokElement.innerHTML = `<strong>Stok:</strong> ${data.newStok}`;
+
+                // Update data-stok pada button
+                buttonElement.setAttribute('data-stok', data.newStok);
+
+                // Jika stok habis, disable button
+                if (data.newStok <= 0) {
+                    buttonElement.className = 'btn-daftar-produk-pelanggan disabled';
+                    buttonElement.disabled = true;
+                    buttonElement.textContent = 'Stok Habis';
+                }
+
+                Swal.fire({
+                    title: 'Sukses!',
+                    text: 'Produk berhasil ditambahkan ke keranjang',
+                    icon: 'success',
+                    timer: 1500
+                });
+            } else {
+                throw new Error(data.message || 'Gagal menambahkan ke keranjang');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message || 'Gagal menambahkan produk ke keranjang',
+                icon: 'error'
+            });
+        });
+    }
+</script>
+</body>
+
+</html>

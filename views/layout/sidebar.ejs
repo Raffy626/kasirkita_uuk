@@ -1,0 +1,74 @@
+<aside class="sidebar">
+    <% if (user) { %>
+    <div class="user-profile">
+        <div class="user-avatar">
+            <% if (user.avatar) { %>
+                <img src="<%= user.avatar %>" alt="<%= user.nama || user.username %>" />
+            <% } else { %>
+                <%= (user.nama || user.username).charAt(0).toUpperCase() %>
+            <% } %>
+        </div>
+        <div class="user-info">
+            <h3><%= user.nama || user.username %></h3>
+            <p>
+                <% if (user.role === 'admin') { %>
+                    Admin
+                <% } else if (user.role === 'petugas') { %>
+                    Petugas
+                <% } else { %>
+                    Customer
+                <% } %>
+            </p>
+        </div>
+    </div>
+    <% } %>
+    <h1>Kasir Kita</h1>
+    <nav>
+        <% if (user.role === 'admin' || user.role === 'petugas') { %>
+            <ul>
+                <li class="li-sidebar"><a href="/produk" class="nav-link">
+                    <img src="/icons/produk.svg" alt="Produk" width="20" height="20">
+                    Daftar produk
+                    </a>
+                </li>
+                <li><a href="/produk/tambah" class="nav-link">
+                    <img src="/icons/tambah.svg" alt="Tambah" width="20" height="20">
+                    Tambah produk
+                    </a>
+                </li>
+                <li><a href="/history" class="nav-link">
+                    <img src="/icons/riwayat.svg" alt="history" width="20" height="20">
+                    Riwayat penjualan
+                    </a>
+                </li>
+            </ul>
+        <% } else if (user.role === 'pelanggan') { %>
+            <ul>
+                <li><a href="/produk/pelanggan" class="nav-link">
+                    <img src="/icons/produk.svg" alt="Produk" width="20" height="20">
+                    Produk pelanggan
+                    </a>
+                </li>
+                <li><a href="/penjualan" class="nav-link">
+                    <img src="/icons/keranjang.svg" alt="Laporan" width="20" height="20">
+                    Keranjang belanja
+                    </a>
+                </li>
+            </ul>
+        <% } %>
+    </nav>
+    <form action="/auth/logout" method="get" class="logout-form">
+        <button type="submit" class="logout">Logout</button>
+    </form>
+</aside>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const links = document.querySelectorAll('.sidebar .nav-link');
+        links.forEach(link => {
+            if (link.getAttribute('href') === window.location.pathname) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>

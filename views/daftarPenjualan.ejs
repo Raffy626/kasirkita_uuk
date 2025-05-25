@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Keranjang Belanja</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="daftar-penjualan-body">
+    <%- include('layout/sidebar') %>
+        <div class="daftar-penjualan-container">
+            <h1>Keranjang Belanja</h1>
+            <% if (cart && cart.length> 0) { %>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>Nama Produk</th>
+                            <th>Harga</th>
+                            <th>Jumlah</th>
+                            <th>SubTotal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% cart.forEach(item=> { %>
+                            <tr>
+                                <td>
+                                    <%= item.nama_produk %>
+                                </td>
+                                <td>Rp <span><%= item.harga.toLocaleString('id-ID') %></span>
+                                </td>
+                                <td>
+                                    <%= item.quantity %>
+                                </td>
+                                <td>Rp <span><%= (item.harga * item.quantity).toLocaleString('id-ID') %></span></td>
+                                <td>
+                                    <a href="/penjualan/cancel-item/<%= item.produkId %>" class="btn-cancel"
+                                        onclick="return cancelItem(event)">
+                                        Batalkan
+                                    </a>
+
+                                    <script>
+                                        function cancelItem(event) {
+                                            event.preventDefault();
+                                            Swal.fire({
+                                                title: 'Yakin ingin membatalkan item ini?',
+                                                icon: 'warning',
+                                                showCancelButton: true,
+                                                confirmButtonText: 'Ya',
+                                                cancelButtonText: 'Batal'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    window.location.href = event.target.href;
+                                                }
+                                            });
+                                        }
+                                    </script>
+
+                                </td>
+                            </tr>
+                            <% }) %>
+                                <tr>
+                                    <td colspan="3"><strong>Total Belanja</strong></td>
+                                    <td colspan="2">
+                                        <strong>Rp <span><%= totalBiaya.toLocaleString('id-ID') %></span></strong>
+                                    </td>
+                                </tr>
+                    </tbody>
+                </table>
+                <button onclick="checkout()" class="btn-checkout">Checkout</button>
+                <% } else { %>
+                        <table class="empty-cart">
+                            <thead>
+                                <tr>
+                                    <th>Nama Produk</th>
+                                    <th>Harga</th>
+                                    <th>Jumlah</th>
+                                    <th>SubTotal</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    <% } %>
+        </div>
+        <script>
+function checkout() {
+    fetch('/checkout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect ke halaman checkout produk dengan ID transaksi
+            window.location.href = `/checkout/produk/${data.transactionId}`;
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: data.message
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Terjadi kesalahan saat checkout'
+        });
+    });
+}
+</script>
+</body>
+</html>

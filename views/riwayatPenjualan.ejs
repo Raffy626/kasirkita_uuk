@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Riwayat Penjualan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- Tambahkan CSS untuk modal -->
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 700px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .close-modal {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            color: #555;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .detail-table th, .detail-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .detail-table th {
+            background-color: #f8f9fa;
+        }
+
+        .detail-info {
+            margin-bottom: 20px;
+        }
+
+        .detail-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .total-section {
+            text-align: right;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 2px solid #ddd;
+        }
+    </style>
+</head>
+<body class="riwayat-body">
+    <%- include('layout/sidebar') %>
+    <div class="riwayat-container">
+        <h1>Riwayat Penjualan</h1>
+        <% if (penjualanList && penjualanList.length > 0) { %>
+            <a href="/history/download-all" class="btn-download">
+                <i class="fas fa-download"></i> Cetak Semua PDF
+            </a>
+            <table class="riwayat-table">
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Nama pelanggan</th>
+                        <th>Total</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% penjualanList.forEach(penjualan => { %>
+                        <tr>
+                            <td><%= new Date(penjualan.tanggalPenjualan).toLocaleString('id-ID') %></td>
+                            <td>
+                                <%= penjualan.pelanggan_id?.akun.nama || penjualan.pelanggan_id?.akun.username || '-' %>
+                            </td>
+                            <td>Rp <%= penjualan.totalBiaya.toLocaleString('id-ID') %></td>
+                            <td>
+                                <button onclick="showDetail('<%= penjualan._id %>')" class="btn-detail">Lihat Detail</button>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+            <!-- Tambahkan Modal -->
+            <div id="detailModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Detail Pembelian</h2>
+                        <span class="close-modal" onclick="closeModal()">&times;</span>
+                    </div>
+                    <div id="modalContent">
+                        <!-- Content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <a href="#" onclick="confirmDeleteAll()" class="btn-delete-all">
+                <i class="fas fa-trash"></i> Hapus Semua Riwayat
+            </a>
+        <% } else { %>
+            <div class="empty-riwayat">
+                <p>Belum ada riwayat pembelian</p>
+            </div>
+        <% } %>
+    </div>
+
+    <script>
+        // Function to show modal
+        function showDetail(id) {
+            const modal = document.getElementById('detailModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            // Show loading state
+            modalContent.innerHTML = '<p>Loading...</p>';
+            modal.style.display = 'block';
+
+            // Fetch detail data
+            fetch(`/history/detail-data/${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    let html = `
+                        <div class="detail-info">
+                            <p><strong>No. Transaksi:</strong> ${data.penjualan._id}</p>
+                            <p><strong>Tanggal:</strong> ${new Date(data.penjualan.tanggalPenjualan).toLocaleString('id-ID')}</p>
+                            <p><strong>Pembeli:</strong> ${data.penjualan.pelanggan_id?.akun.nama || '-'}</p>
+                        </div>
+                        <table class="detail-table">
+                            <thead>
+                                <tr>
+                                    <th>Produk</th>
+                                    <th>Jumlah</th>
+                                    <th>Harga</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    data.details.forEach(detail => {
+                        html += `
+                            <tr>
+                                <td>${detail.id_produk.nama_produk}</td>
+                                <td>${detail.jumlah}</td>
+                                <td>Rp ${detail.id_produk.harga.toLocaleString('id-ID')}</td>
+                                <td>Rp ${(detail.jumlah * detail.id_produk.harga).toLocaleString('id-ID')}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                            </tbody>
+                        </table>
+                        <div class="total-section">
+                            <h3>Total: Rp ${data.penjualan.totalBiaya.toLocaleString('id-ID')}</h3>
+                        </div>
+                    `;
+
+                    modalContent.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalContent.innerHTML = '<p>Terjadi kesalahan saat memuat data</p>';
+                });
+        }
+
+        // Function to close modal
+        function closeModal() {
+            const modal = document.getElementById('detailModal');
+            modal.style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Existing delete confirmation function
+        function confirmDeleteAll() {
+            Swal.fire({
+                title: 'Konfirmasi Hapus',
+                text: 'Apakah Anda yakin ingin menghapus semua riwayat pembelian?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/history/delete-all', { method: 'DELETE' })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Berhasil', 'Semua riwayat pembelian telah dihapus.', 'success')
+                                    .then(() => window.location.reload());
+                            } else {
+                                Swal.fire('Gagal', data.message || 'Gagal menghapus riwayat pembelian.', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'Terjadi kesalahan saat menghapus riwayat.', 'error');
+                        });
+                }
+            });
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-minimal/minimal.css">
+</body>
+</html>

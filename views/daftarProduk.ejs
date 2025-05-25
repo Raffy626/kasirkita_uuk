@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-minimal/minimal.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Daftar Produk</title>
+</head>
+<body class="daftar-produk-body">
+    <%- include('layout/sidebar')  %>
+    <h1>Daftar Produk</h1>
+    <div class="cart-container">
+        <% produkList.forEach( produk => { %>
+            <div class="cart-item">
+                <img src="/image/<%= produk.foto %>" alt="Foto produk" width="100">
+                <div class="cart-item-info">
+                    <p><strong>Nama produk:</strong> <%= produk.nama_produk %> </p>
+                    <p><strong class="kategori-badge kategori">Kategori:</strong> <%= produk.kategori %> </p>
+                    <p><strong>Harga:</strong> Rp <%= produk.harga.toLocaleString('id-ID') %> </p>
+                    <p><strong>Stok:</strong> <%= produk.stok %> </p>
+                </div>
+                <div class="button-container">
+                    <a href="/produk/edit/<%= produk._id %>" class="btn-primary">Edit</a>
+                    <a href="#" onclick="confirmDelete('<%= produk._id %>', '<%= produk.nama_produk %>')" class="btn-delete-daftar-produk">Delete</a>
+                </div>
+            </div>
+        <% }); %>
+    </div>
+
+    <script>
+        function confirmDelete(id, productName) {
+            Swal.fire({
+                title: 'Konfirmasi Hapus',
+                text: `Apakah Anda yakin ingin menghapus produk "${productName}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/produk/delete/${id}`;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

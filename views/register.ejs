@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Register</title>
+</head>
+<body class="register-body">
+    <div class="register-container">
+        <h2>Register</h2>
+        <form action="/auth/register" method="POST" class="register-form">
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="nama">Nama Lengkap:</label>
+        <input type="text" id="nama" name="nama" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="alamat">Alamat:</label>
+        <input type="text" id="alamat" name="alamat" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="noTelepon">Nomor Telepon:</label>
+        <input type="tel" id="noTelepon" name="noTelepon" required>
+    </div>
+    
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+    </div>
+    <a href="/auth/login">Login</a>
+
+    <button type="submit" class="btn-register">Daftar</button>
+</form>
+</div>
+<script>
+document.querySelector('.register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    try {
+        const response = await fetch('/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: document.getElementById('username').value,
+                nama: document.getElementById('nama').value,
+                alamat: document.getElementById('alamat').value,
+                noTelepon: document.getElementById('noTelepon').value,
+                password: document.getElementById('password').value
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Registrasi berhasil, silakan login',
+                timer: 1500
+            });
+            // Redirect ke halaman login setelah alert tertutup
+            window.location.href = '/auth/login';
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: data.message || 'Terjadi kesalahan saat registrasi'
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'Terjadi kesalahan saat registrasi'
+        });
+    }
+});
+</script>
+</body>
+</html>
