@@ -17,24 +17,21 @@ const processCheckout = async (req, res) => {
             throw new Error('Cart is empty');
         }
 
-        // Calculate total
         const totalBiaya = cart.items.reduce((total, item) =>
             total + (item.harga * item.quantity), 0);
 
-        // Create penjualan record with pelanggan_id
         const penjualan = await Penjualan.create({
             tanggalPenjualan: new Date(),
             totalBiaya: totalBiaya,
             pelanggan_id: req.session.user._id
         });
 
-        // Create detail records and update stock
         for (const item of cart.items) {
             await DetailProduk.create({
-                id_penjualan: penjualan._id,      // Changed from penjualan_id
-                id_produk: item.produkId,         // Changed from produk_id
-                jumlah: item.quantity,            // Changed from quantity
-                total_harga: item.harga * item.quantity  // Added total_harga
+                id_penjualan: penjualan._id,
+                id_produk: item.produkId,
+                jumlah: item.quantity,
+                total_harga: item.harga * item.quantity
             });
 
             // Update product stock
@@ -45,7 +42,6 @@ const processCheckout = async (req, res) => {
             // }
         }
 
-        // Save transaction in session for receipt generation
         req.session.lastTransaction = {
             id: penjualan._id,
             date: penjualan.tanggalPenjualan,
@@ -57,7 +53,6 @@ const processCheckout = async (req, res) => {
         cart.items = [];
         await cart.save();
 
-        // Send success response
         res.json({
             success: true,
             message: 'Checkout berhasil',
@@ -82,13 +77,11 @@ const downloadReceipt = async (req, res) => {
             throw new Error('Transaction not found');
         }
 
-        // Create receipts directory if it doesn't exist
         const receiptDir = path.join(__dirname, '../public/receipts');
         if (!fs.existsSync(receiptDir)) {
             fs.mkdirSync(receiptDir, { recursive: true });
         }
 
-        // Generate PDF
         const doc = new PDFDocument({
             size: 'A4',
             margin: 50
@@ -100,24 +93,20 @@ const downloadReceipt = async (req, res) => {
 
         doc.pipe(writeStream);
 
-        // Add receipt content
         doc.fontSize(20).text('KASIR KITA', { align: 'center' });
         doc.moveDown();
         doc.fontSize(12).text('--------------------------------------------------------------------------------');
         doc.moveDown();
 
-        // Receipt details
         doc.fontSize(12)
             .text(`Tanggal: ${transaction.date.toLocaleString()}`)
             .text(`No. Transaksi: ${transaction.id}`);
 
         doc.moveDown();
 
-        // Table header
         doc.text('Produk                Qty    Harga         Total');
         doc.text('--------------------------------------------------------------------------------');
 
-        // Add items
         transaction.items.forEach(item => {
             doc.text(
                 `${item.nama_produk.substring(0, 20).padEnd(20)} ` +
@@ -134,10 +123,8 @@ const downloadReceipt = async (req, res) => {
         doc.moveDown(2);
         doc.fontSize(10).text('Terima kasih telah berbelanja!', { align: 'center' });
 
-        // Finalize PDF
         doc.end();
 
-        // Wait for the PDF to be fully written before sending
         writeStream.on('finish', () => {
             res.download(filePath, filename, (err) => {
                 if (err) {
@@ -145,14 +132,12 @@ const downloadReceipt = async (req, res) => {
                     return res.status(500).json({ message: 'Error downloading receipt' });
                 }
 
-                // Clean up file after download
                 fs.unlink(filePath, (unlinkErr) => {
                     if (unlinkErr) console.error('File cleanup error:', unlinkErr);
                 });
             });
         });
 
-        // Handle write stream errors
         writeStream.on('error', (error) => {
             console.error('Write stream error:', error);
             res.status(500).json({ message: 'Error generating receipt' });

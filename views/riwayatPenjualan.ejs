@@ -195,22 +195,16 @@
                     modalContent.innerHTML = '<p>Terjadi kesalahan saat memuat data</p>';
                 });
         }
-
-        // Function to close modal
         function closeModal() {
             const modal = document.getElementById('detailModal');
             modal.style.display = 'none';
         }
-
-        // Close modal when clicking outside
         window.onclick = function(event) {
             const modal = document.getElementById('detailModal');
             if (event.target == modal) {
                 modal.style.display = 'none';
             }
         }
-
-        // Existing delete confirmation function
         function confirmDeleteAll() {
             Swal.fire({
                 title: 'Konfirmasi Hapus',

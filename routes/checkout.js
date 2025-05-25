@@ -89,32 +89,26 @@ router.get('/download-receipt/:id', async (req, res) => {
             return res.status(404).send('Transaksi tidak ditemukan');
         }
 
-        // Buat PDF
         const doc = new PDFDocument({
             size: 'A4',
             margin: 50
         });
-        
-        // Set response headers
+
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=receipt-${penjualan._id}.pdf`);
-        
-        // Pipe PDF ke response
+
         doc.pipe(res);
-        
-        // Header
+
         doc.fontSize(24).text('KASIR KITA', { align: 'center' });
         doc.moveDown(0.5);
         doc.fontSize(16).text('Struk Pembelian', { align: 'center' });
         doc.moveDown();
 
-        // Garis pembatas
         doc.moveTo(50, doc.y)
            .lineTo(545, doc.y)
            .stroke();
         doc.moveDown();
 
-        // Informasi transaksi
         doc.fontSize(12);
         doc.text(`ID Transaksi : ${penjualan._id}`);
         doc.text(`Tanggal     : ${new Date(penjualan.tanggalPenjualan).toLocaleString('id-ID', {
@@ -127,7 +121,6 @@ router.get('/download-receipt/:id', async (req, res) => {
         })}`);
         doc.moveDown();
 
-        // Header tabel
         let startX = 50;
         let startY = doc.y;
         let colWidth = {
@@ -144,15 +137,13 @@ router.get('/download-receipt/:id', async (req, res) => {
         doc.text('Jumlah', startX + colWidth.no + colWidth.nama, startY, { width: colWidth.jumlah, align: 'right' });
         doc.text('Harga', startX + colWidth.no + colWidth.nama + colWidth.jumlah, startY, { width: colWidth.harga, align: 'right' });
         doc.text('Total', startX + colWidth.no + colWidth.nama + colWidth.jumlah + colWidth.harga, startY, { width: colWidth.total, align: 'right' });
-        
-        // Garis pembatas header tabel
+
         doc.moveDown();
         doc.moveTo(50, doc.y)
            .lineTo(545, doc.y)
            .stroke();
         doc.moveDown();
 
-        // Isi tabel
         doc.font('Helvetica');
         let totalKeseluruhan = 0;
         details.forEach((detail, index) => {
@@ -168,13 +159,11 @@ router.get('/download-receipt/:id', async (req, res) => {
             doc.moveDown();
         });
 
-        // Garis pembatas total
         doc.moveTo(50, doc.y)
            .lineTo(545, doc.y)
            .stroke();
         doc.moveDown();
 
-        // Total keseluruhan
         doc.font('Helvetica-Bold');
         doc.text(
             `Total Keseluruhan: Rp ${totalKeseluruhan.toLocaleString('id-ID')}`,
@@ -184,12 +173,10 @@ router.get('/download-receipt/:id', async (req, res) => {
         );
         doc.moveDown(2);
 
-        // Footer
         doc.fontSize(10).font('Helvetica');
         doc.text('Terima kasih telah berbelanja di Kasir Kita', { align: 'center' });
         doc.text('Simpan struk ini sebagai bukti pembelian', { align: 'center' });
         
-        // Finalize PDF
         doc.end();
         
     } catch (error) {

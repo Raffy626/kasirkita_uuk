@@ -11,7 +11,6 @@ const path = require('path');
 // Update middleware untuk mengizinkan admin dan petugas untuk semua route
 router.use(checkSession, checkRole(['admin', 'petugas']));
 
-// Middleware to check if user is logged in
 const isAuthenticated = (req, res, next) => {
     if (req.session && req.session.user) {
         return next();
@@ -68,26 +67,22 @@ router.get('/download-pdf/:id', async (req, res) => {
             bufferPages: true
         });
         
-        // Set response headers
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=riwayat-pembelian-${req.params.id}.pdf`);
         
         doc.pipe(res);
 
-        // Add content to PDF
         doc.fontSize(20).text('KASIR KITA', { align: 'center' });
         doc.moveDown();
         doc.fontSize(14).text('Riwayat Pembelian', { align: 'center' });
         doc.moveDown();
         
-        // User info section
         doc.fontSize(12);
         doc.text(`Nama: ${penjualan.pelanggan_id?.akun.nama || '-'}`);
         doc.text(`Username: ${penjualan.pelanggan_id?.akun.username || '-'}`);
         doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`);
         doc.moveDown();
 
-        // Table header
         doc.fontSize(10);
         const tableTop = doc.y;
         doc.text('No', 50, tableTop);
@@ -96,12 +91,10 @@ router.get('/download-pdf/:id', async (req, res) => {
         doc.text('Harga', 350, tableTop);
         doc.text('Total', 450, tableTop);
 
-        // Draw horizontal line
         doc.moveTo(50, tableTop + 15)
            .lineTo(550, tableTop + 15)
            .stroke();
 
-        // Add table content
         let y = tableTop + 30;
         let totalKeseluruhan = 0;
 
@@ -116,12 +109,10 @@ router.get('/download-pdf/:id', async (req, res) => {
             y += 20;
         });
 
-        // Draw line before total
         doc.moveTo(50, y + 10)
            .lineTo(550, y + 10)
            .stroke();
 
-        // Add total
         doc.fontSize(12).font('Helvetica-Bold');
         doc.text('Total Keseluruhan:', 350, y + 20);
         doc.text(`Rp ${totalKeseluruhan.toLocaleString('id-ID')}`, 450, y + 20);
@@ -135,9 +126,7 @@ router.get('/download-pdf/:id', async (req, res) => {
 
 router.delete('/delete-all', checkSession, async (req, res) => {
     try {
-        // Hapus semua riwayat pembelian
         await Penjualan.deleteMany({});
-        // Hapus juga detail produk yang terkait
         await DetailProduk.deleteMany({});
 
         res.json({ success: true, message: 'Semua riwayat pembelian berhasil dihapus.' });
@@ -166,7 +155,6 @@ router.get('/detail-data/:id', async (req, res) => {
     }
 });
 
-// Tambahkan route untuk download semua riwayat
 router.get('/download-all', async (req, res) => {
     try {
         let penjualanList = await Penjualan.find()
@@ -176,30 +164,25 @@ router.get('/download-all', async (req, res) => {
             })
             .sort({ tanggalPenjualan: -1 });
 
-        // Create PDF
         const doc = new PDFDocument({ 
             size: 'A4',
             margin: 40,
             bufferPages: true
         });
         
-        // Set response headers
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename="semua-riwayat-pembelian.pdf"');
         doc.pipe(res);
 
-        // Header
         doc.fontSize(24).text('KASIR KITA', { align: 'center' });
         doc.moveDown(0.5);
         doc.fontSize(16).text('Riwayat Pembelian', { align: 'center' });
         doc.moveDown(1);
 
-        // Info cetak
         doc.fontSize(12);
         doc.text(`Tanggal Cetak: ${new Date().toLocaleString('id-ID')}`);
         doc.moveDown(1);
 
-        // Draw table header
         const tableTop = doc.y;
         const colWidths = {
             no: 40,
@@ -208,10 +191,8 @@ router.get('/download-all', async (req, res) => {
             total: 150
         };
         
-        // Header background
         doc.rect(50, tableTop - 5, 500, 20).fill('#f0f0f0');
         
-        // Header text
         doc.fillColor('black');
         doc.fontSize(10);
         let currentX = 50;
@@ -226,17 +207,14 @@ router.get('/download-all', async (req, res) => {
         currentX += colWidths.tanggal;
         doc.text('Total', currentX, tableTop);
 
-        // Draw horizontal line
         doc.moveTo(50, tableTop + 15)
            .lineTo(550, tableTop + 15)
            .stroke();
 
-        // Content
         let yPos = tableTop + 25;
         let totalKeseluruhan = 0;
 
         penjualanList.forEach((penjualan, index) => {
-            // Check if we need a new page
             if (yPos > doc.page.height - 100) {
                 doc.addPage();
                 yPos = 50;
@@ -244,33 +222,27 @@ router.get('/download-all', async (req, res) => {
 
             currentX = 50;
             
-            // No
             doc.text((index + 1).toString(), currentX, yPos);
             currentX += colWidths.no;
             
-            // Pelanggan
             const pelangganNama = penjualan.pelanggan_id?.akun.nama || '-';
             doc.text(pelangganNama.substring(0, 15), currentX, yPos);
             currentX += colWidths.pelanggan;
             
-            // Tanggal
             doc.text(new Date(penjualan.tanggalPenjualan).toLocaleString('id-ID'), currentX, yPos);
             currentX += colWidths.tanggal;
             
-            // Total
             doc.text(`Rp ${penjualan.totalBiaya.toLocaleString('id-ID')}`, currentX, yPos);
             
             totalKeseluruhan += penjualan.totalBiaya;
             yPos += 20;
 
-            // Draw light line between rows
             doc.moveTo(50, yPos - 5)
                .lineTo(550, yPos - 5)
                .strokeColor('#cccccc')
                .stroke();
         });
 
-        // Total section
         yPos += 10;
         doc.moveTo(50, yPos)
            .lineTo(550, yPos)
@@ -282,7 +254,6 @@ router.get('/download-all', async (req, res) => {
         doc.text('Total Keseluruhan:', 350, yPos);
         doc.text(`Rp ${totalKeseluruhan.toLocaleString('id-ID')}`, 450, yPos);
 
-        // Footer
         doc.fontSize(10).font('Helvetica');
         doc.text('Terima kasih telah berbelanja di Kasir Kita', {
             align: 'center',

@@ -40,7 +40,6 @@ const produkController = {
             const { nama_produk, kategori, harga, stok} = req.body;
             const fotoPath = req.file ? req.file.filename : null;
 
-            //Cari product bedasarkan Id
             const produk = await Produk.findById(produkId);
             if (!produk) {
                 return res.status(404).send("Produk tidak ada Di dalam toko");
@@ -53,14 +52,12 @@ const produkController = {
                     }
             }
 
-            //Update hanya jika ada input baru,jika kosong tetap pakai nilai lama
             produk.kategori = kategori || produk.kategori;
             produk.nama_produk = nama_produk || produk.nama_produk;
             produk.harga = harga || produk.harga;
             produk.stok = stok || produk.stok;
             produk.foto = fotoPath || produk.foto;
 
-            //simpan perubahan ke database
             await produk.save();
             res.redirect('/produk');
 

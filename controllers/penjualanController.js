@@ -8,7 +8,6 @@ const penjualanController = {
             const produkId = req.params.id;
             const userId = req.session.user._id;
 
-            // Find product and verify stock
             const produk = await Produk.findById(produkId);
             if (!produk) {
                 return res.status(404).json({
@@ -24,11 +23,9 @@ const penjualanController = {
                 });
             }
 
-            // Update stock first
             produk.stok = produk.stok - 1;
             await produk.save();
 
-            // Find or create cart
             let cart = await Cart.findOne({ user_id: userId });
             if (!cart) {
                 cart = new Cart({
@@ -37,7 +34,6 @@ const penjualanController = {
                 });
             }
 
-            // Update cart items
             const existingItem = cart.items.find(item =>
                 item.produkId.toString() === produkId
             );
@@ -55,7 +51,6 @@ const penjualanController = {
 
             await cart.save();
 
-            // Kirim response JSON dengan stok terbaru
             return res.json({
                 success: true,
                 message: 'Produk berhasil ditambahkan ke keranjang',
@@ -89,14 +84,12 @@ const penjualanController = {
                 return res.status(404).send('Item tidak ditemukan di keranjang');
             }
 
-            // Return stock to product
             const produk = await Produk.findById(produkId);
             if (produk) {
                 produk.stok += cartItem.quantity;
                 await produk.save();
             }
 
-            // Remove item from cart
             cart.items = cart.items.filter(item =>
                 item.produkId.toString() !== produkId
             );
